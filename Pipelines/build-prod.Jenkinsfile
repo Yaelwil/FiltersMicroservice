@@ -41,7 +41,7 @@ pipeline {
         }
         stage('Trigger Deploy') {
             steps {
-                build job: 'FiltersDeployProd', wait: false, parameters: [
+                build job: 'PolybotDeployProd', wait: false, parameters: [
                     string(name: 'SERVICE_NAME', value: "FiltersMicroservice"),
                     string(name: 'IMAGE_FULL_NAME_PARAM', value: "$DOCKER_USERNAME/$IMAGE_BASE_NAME:$IMAGE_TAG")
                 ]
