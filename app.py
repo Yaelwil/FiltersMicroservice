@@ -3,6 +3,8 @@ import boto3
 import requests
 from loguru import logger
 from filters import Filters
+from get_cert import get_cert
+
 # Load environment variables
 images_bucket = os.environ["BUCKET_NAME"]
 queue_name = os.environ["FILTERS_QUEUE_NAME"]
@@ -11,6 +13,19 @@ alb_url = os.environ["ALB_URL"]
 # Initialize SQS client, S3 client resources
 sqs_client = boto3.client('sqs', region_name=region)
 s3 = boto3.client('s3')
+
+prefix = os.environ["CERT_PREFIX"]
+DOMAIN_CERTIFICATE = get_cert(prefix)
+
+if DOMAIN_CERTIFICATE:
+    logger.info('Retrieved DOMAIN_CERTIFICATE from Secrets Manager')
+else:
+    raise ValueError("Failed to retrieve secret DOMAIN_CERTIFICATE from Secrets Manager")
+domain_certificate_file = 'DOMAIN_CERTIFICATE.pem'
+with open(domain_certificate_file, 'w') as file:
+    file.write(DOMAIN_CERTIFICATE)
+logger.info('Created certificate file successfully')
+
 
 
 def consume():
@@ -74,10 +89,17 @@ def consume():
                 logger.info(f"{alb_url}/results_filter?predictionId={prediction_id}")
 
                 # perform a GET request to Polybot to /results endpoint
-                response = requests.post(f"{alb_url}/results_filter?predictionId={prediction_id}", json=params)
-                print(response.text)
+                # response = requests.post(f"{alb_url}/results_filter?predictionId={prediction_id}", json=params)
+                # print(response.text)
 
+                response = requests.post(
+                    f"{alb_url}/results_filter?predictionId={prediction_id}",
+                    json=params,
+                    verify=domain_certificate_file  # Use the Python variable here
+                )
                 logger.info(f"Sending POST request to {alb_url} with params: {params}")
+
+                print(response.text)
 
                 sqs_client.delete_message(QueueUrl=queue_name, ReceiptHandle=receipt_handle)
                 logger.info('Deleted message from the queue')
