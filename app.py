@@ -14,17 +14,17 @@ alb_url = os.environ["ALB_URL"]
 sqs_client = boto3.client('sqs', region_name=region)
 s3 = boto3.client('s3')
 
-prefix = os.environ["CERT_PREFIX"]
-DOMAIN_CERTIFICATE = get_cert(prefix)
-
-if DOMAIN_CERTIFICATE:
-    logger.info('Retrieved DOMAIN_CERTIFICATE from Secrets Manager')
-else:
-    raise ValueError("Failed to retrieve secret DOMAIN_CERTIFICATE from Secrets Manager")
-domain_certificate_file = 'DOMAIN_CERTIFICATE.pem'
-with open(domain_certificate_file, 'w') as file:
-    file.write(DOMAIN_CERTIFICATE)
-logger.info('Created certificate file successfully')
+# prefix = os.environ["CERT_PREFIX"]
+# DOMAIN_CERTIFICATE = get_cert(prefix)
+#
+# if DOMAIN_CERTIFICATE:
+#     logger.info('Retrieved DOMAIN_CERTIFICATE from Secrets Manager')
+# else:
+#     raise ValueError("Failed to retrieve secret DOMAIN_CERTIFICATE from Secrets Manager")
+# domain_certificate_file = 'DOMAIN_CERTIFICATE.pem'
+# with open(domain_certificate_file, 'w') as file:
+#     file.write(DOMAIN_CERTIFICATE)
+# logger.info('Created certificate file successfully')
 
 
 
@@ -88,14 +88,9 @@ def consume():
 
                 logger.info(f"{alb_url}/results_filter?predictionId={prediction_id}")
 
-                # perform a GET request to Polybot to /results endpoint
-                # response = requests.post(f"{alb_url}/results_filter?predictionId={prediction_id}", json=params)
-                # print(response.text)
-
                 response = requests.post(
                     f"{alb_url}/results_filter?predictionId={prediction_id}",
                     json=params,
-                    verify=domain_certificate_file  # Use the Python variable here
                 )
                 logger.info(f"Sending POST request to {alb_url} with params: {params}")
 
