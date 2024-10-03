@@ -89,5 +89,6 @@ def consume():
                 sqs_client.delete_message(QueueUrl=queue_name, ReceiptHandle=receipt_handle)
                 logger.info('Deleted message from the queue')
 
+
 if __name__ == "__main__":
     consume()
